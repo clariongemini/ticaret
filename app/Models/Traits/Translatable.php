@@ -19,14 +19,20 @@ trait Translatable
         /** @var mixed $translations */
         $translations = $this->{$attribute};
 
-        if (is_array($translations) && isset($translations[$locale])) {
-            return is_string($translations[$locale]) ? $translations[$locale] : (string) $translations[$locale];
+        if (is_array($translations)) {
+            $val = $translations[$locale] ?? null;
+            if (is_string($val)) {
+                return $val;
+            }
         }
 
         // Fallback to primary locale (e.g., 'tr') if current locale is not found
         $fallbackLocale = (string) config('app.fallback_locale', 'tr');
-        if (is_array($translations) && isset($translations[$fallbackLocale])) {
-            return is_string($translations[$fallbackLocale]) ? $translations[$fallbackLocale] : (string) $translations[$fallbackLocale];
+        if (is_array($translations)) {
+            $fallbackVal = $translations[$fallbackLocale] ?? null;
+            if (is_string($fallbackVal)) {
+                return $fallbackVal;
+            }
         }
 
         return null;
