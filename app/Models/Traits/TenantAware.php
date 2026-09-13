@@ -46,4 +46,24 @@ trait TenantAware
             }
         });
     }
+
+    /**
+     * Create a new Eloquent query builder for the model.
+     * Prevents mass update of tenant_id unless in SystemContext.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder|static
+     */
+    public function newEloquentBuilder($query)
+    {
+        return new class($query) extends \Illuminate\Database\Eloquent\Builder {
+            public function update(array $values)
+            {
+                if (!\App\SharedKernel\Context\TenantContext::isSystemContext() && array_key_exists('tenant_id', $values)) {
+                    throw new \App\Exceptions\TenantIsolationException("Mass updating tenant_id is blocked for [" . $this->model->getTable() . "].");
+                }
+                return parent::update($values);
+            }
+        };
+    }
 }

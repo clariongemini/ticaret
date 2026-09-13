@@ -78,3 +78,41 @@ test('System Context Bypass: System can query all tenants', function () {
         expect($stores)->toHaveCount(2);
     });
 });
+
+test('Nested executeForTenant disables system bypass and restores it afterwards', function () {
+    TenantContext::executeAsSystem(function () {
+        expect(TenantContext::isSystemContext())->toBeTrue();
+        
+        TenantContext::executeForTenant($this->tenantA->id, function () {
+            expect(TenantContext::isSystemContext())->toBeFalse();
+            $stores = Store::all();
+            expect($stores)->toHaveCount(1);
+        });
+        
+        expect(TenantContext::isSystemContext())->toBeTrue();
+    });
+});
+
+test('executeForTenant restores context on exception', function () {
+    TenantContext::executeAsSystem(function () {
+        try {
+            TenantContext::executeForTenant($this->tenantA->id, function () {
+                expect(TenantContext::isSystemContext())->toBeFalse();
+                throw new \RuntimeException("Oops");
+            });
+        } catch (\RuntimeException $e) {
+            // caught
+        }
+        
+        // System context must be restored even after exception
+        expect(TenantContext::isSystemContext())->toBeTrue();
+    });
+});
+
+test('Mass update cannot change tenant_id', function () {
+    TenantContext::executeForTenant($this->tenantA->id, function () {
+        expect(fn() => Store::where('name', 'Store A')->update(['tenant_id' => $this->tenantB->id]))
+            ->toThrow(TenantIsolationException::class, 'Mass updating tenant_id is blocked');
+    });
+});
+

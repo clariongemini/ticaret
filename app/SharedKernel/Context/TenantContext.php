@@ -10,13 +10,18 @@ class TenantContext
     public static function executeForTenant(string $tenantId, callable $callback)
     {
         $previousTenantId = self::$tenantId;
+        $previousSystemState = self::$isSystemContext;
+        
         self::setTenantId($tenantId);
+        self::$isSystemContext = false; // Strictly enforce non-system context for tenant code
         
         try {
             return $callback();
         } finally {
             self::$tenantId = $previousTenantId;
-            if (self::$tenantId === null) {
+            self::$isSystemContext = $previousSystemState;
+            
+            if (self::$tenantId === null && self::$isSystemContext === false) {
                 self::clear();
             }
         }
