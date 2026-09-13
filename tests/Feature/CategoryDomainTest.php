@@ -172,4 +172,18 @@ class CategoryDomainTest extends TestCase
             $a->update(['parent_id' => $c->id]);
         });
     }
+
+    public function test_cannot_bypass_cycle_prevention_via_mass_update()
+    {
+        TenantContext::executeForTenant($this->tenant->id, function () {
+            $a = Category::create(['name' => ['en' => 'A'], 'slug' => ['en' => 'a']]);
+            Category::create(['parent_id' => $a->id, 'name' => ['en' => 'B'], 'slug' => ['en' => 'b']]);
+
+            $this->expectException(\DomainException::class);
+            $this->expectExceptionMessage("Bulk update of parent_id on categories is prohibited.");
+
+            // Direct bulk update bypasses saving event — this must be explicitly blocked
+            Category::whereKey($a->id)->update(['parent_id' => $a->id]);
+        });
+    }
 }

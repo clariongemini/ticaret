@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('url_rewrites', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
             $table->ulid('tenant_id');
             $table->string('locale', 10);
             $table->string('slug');

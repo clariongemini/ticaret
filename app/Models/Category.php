@@ -36,6 +36,31 @@ class Category extends BaseModel
         });
     }
 
+    /**
+     * Override the Eloquent builder to block bulk parent_id mutations.
+     * Direct bulk update of parent_id bypasses the saving event (cycle check),
+     * so it is explicitly prohibited. parent_id must be changed through model save().
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function newEloquentBuilder($query)
+    {
+        /** @phpstan-ignore-next-line */
+        return new class($query) extends \Illuminate\Database\Eloquent\Builder {
+            public function update(array $values)
+            {
+                if (array_key_exists('parent_id', $values)) {
+                    throw new \DomainException(
+                        "Bulk update of parent_id on categories is prohibited. " .
+                        "Use model->parent_id = X; model->save() to ensure cycle prevention."
+                    );
+                }
+                return parent::update($values);
+            }
+        };
+    }
+
     protected $fillable = [
         'parent_id',
         'name',

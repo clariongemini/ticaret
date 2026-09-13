@@ -119,4 +119,44 @@ class UrlRewriteDomainTest extends TestCase
 
         $this->assertDatabaseCount('url_rewrites', 2);
     }
+
+    public function test_cannot_create_url_rewrite_for_cross_tenant_target()
+    {
+        $tenant2Cat = null;
+
+        // Create a category under tenant2
+        TenantContext::executeForTenant($this->tenant2->id, function () use (&$tenant2Cat) {
+            $tenant2Cat = Category::create([
+                'name' => ['en' => 'Tenant2 Category'],
+                'slug' => ['en' => 'tenant2-cat'],
+            ]);
+        });
+
+        // Now attempt to create a UrlRewrite under tenant1 pointing to tenant2's category
+        $this->expectException(\App\Exceptions\TenantIsolationException::class);
+        $this->expectExceptionMessage('Cross-tenant UrlRewrite is blocked');
+
+        TenantContext::executeForTenant($this->tenant1->id, function () use ($tenant2Cat) {
+            UrlRewrite::create([
+                'locale' => 'en',
+                'slug' => 'phones',
+                'target_id' => $tenant2Cat->id,
+                'target_type' => Category::class,
+            ]);
+        });
+    }
+
+    public function test_url_rewrite_id_is_ulid()
+    {
+        TenantContext::executeForTenant($this->tenant1->id, function () {
+            $cat = Category::create(['name' => ['en' => 'Cat'], 'slug' => ['en' => 'cat']]);
+            $rewrite = $cat->urlRewrites()->create([
+                'locale' => 'en',
+                'slug' => 'cat-slug',
+            ]);
+
+            // ULID is a 26-character alphanumeric string
+            $this->assertMatchesRegularExpression('/^[0-9A-Z]{26}$/i', $rewrite->id);
+        });
+    }
 }
