@@ -11,7 +11,13 @@ class Category extends BaseModel
 {
     use TenantAware, Translatable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'parent_id',
+        'name',
+        'slug',
+        'sort_order',
+        'status',
+    ];
 
     protected $casts = [
         'name' => 'array',
@@ -22,7 +28,7 @@ class Category extends BaseModel
     /**
      * Get the parent category.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Category, $this>
      */
     public function parent(): BelongsTo
     {
@@ -32,7 +38,7 @@ class Category extends BaseModel
     /**
      * Get the child categories.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Category, $this>
      */
     public function children(): HasMany
     {

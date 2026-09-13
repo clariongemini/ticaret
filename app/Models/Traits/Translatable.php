@@ -15,17 +15,18 @@ trait Translatable
      */
     public function getTranslation(string $attribute, ?string $locale = null): ?string
     {
-        $locale = $locale ?: App::getLocale();
+        $locale = $locale ?: (string) App::getLocale();
+        /** @var mixed $translations */
         $translations = $this->{$attribute};
 
         if (is_array($translations) && isset($translations[$locale])) {
-            return $translations[$locale];
+            return is_string($translations[$locale]) ? $translations[$locale] : (string) $translations[$locale];
         }
 
         // Fallback to primary locale (e.g., 'tr') if current locale is not found
-        $fallbackLocale = config('app.fallback_locale', 'tr');
+        $fallbackLocale = (string) config('app.fallback_locale', 'tr');
         if (is_array($translations) && isset($translations[$fallbackLocale])) {
-            return $translations[$fallbackLocale];
+            return is_string($translations[$fallbackLocale]) ? $translations[$fallbackLocale] : (string) $translations[$fallbackLocale];
         }
 
         return null;

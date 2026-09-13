@@ -9,7 +9,11 @@ class Brand extends BaseModel
 {
     use TenantAware, Translatable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'slug',
+        'logo_id',
+    ];
 
     protected $casts = [
         'name' => 'array',
