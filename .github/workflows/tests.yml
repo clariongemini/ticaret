@@ -31,7 +31,7 @@ jobs:
         coverage: none
 
     - name: Install Dependencies
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
     - name: Copy .env
       run: cp .env.example .env
@@ -47,6 +47,9 @@ jobs:
         echo "DB_PORT=3306" >> .env.testing
         echo "DB_USERNAME=root" >> .env.testing
         echo "DB_PASSWORD=root" >> .env.testing
+
+    - name: Run Database Migrations (MySQL)
+      run: php artisan migrate:fresh --env=testing
 
     - name: Execute tests (Pest)
       run: vendor/bin/pest
