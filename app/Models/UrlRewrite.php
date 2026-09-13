@@ -26,7 +26,7 @@ class UrlRewrite extends Model
     /**
      * Get the target entity this rewrite points to.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<Model, $this>
      */
     public function target(): MorphTo
     {
