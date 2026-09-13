@@ -1,0 +1,43 @@
+parameters:
+  paths:
+    - ./app
+  layers:
+    - name: Domain
+      collectors:
+        - type: directory
+          value: app/Modules/.*/Domain/.*
+          regex: true
+    - name: Application
+      collectors:
+        - type: directory
+          value: app/Modules/.*/Application/.*
+          regex: true
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: app/Modules/.*/Infrastructure/.*
+          regex: true
+    - name: API
+      collectors:
+        - type: directory
+          value: app/Modules/.*/API/.*
+          regex: true
+    - name: SharedKernel
+      collectors:
+        - type: directory
+          value: app/SharedKernel/.*
+          regex: true
+  ruleset:
+    Domain:
+      - SharedKernel
+    Application:
+      - Domain
+      - SharedKernel
+    Infrastructure:
+      - Application
+      - Domain
+      - SharedKernel
+    API:
+      - Application
+      - Domain
+      - SharedKernel
