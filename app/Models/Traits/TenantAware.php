@@ -47,6 +47,7 @@ trait TenantAware
         });
     }
 
+    /**
      * Create a new Eloquent query builder for the model.
      * Prevents mass update of tenant_id unless in SystemContext.
      *
