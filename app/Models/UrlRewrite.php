@@ -68,12 +68,14 @@ class UrlRewrite extends BaseModel
             return;
         }
 
+        $targetIdStr = (string) $targetId;
+
         /** @var Model|null $target */
         $target = $targetClass::withoutGlobalScopes()->find($targetId);
 
         if (!$target) {
             throw new TenantIsolationException(
-                "UrlRewrite target [{$targetClass}:{$targetId}] does not exist."
+                "UrlRewrite target [{$targetClass}:{$targetIdStr}] does not exist."
             );
         }
 
