@@ -67,7 +67,7 @@ Projenin inşası, bir gökdelenin inşası kadar katı ve disiplinli bir **10 K
 
 *Aşağıdaki sıra, geliştirme sürecinin anayasasıdır:*
 
-1. **Kat 0 (Mimari Kararlar):** Tüm mimari kurallar kod yazılmadan (ADR belgeleriyle) alınır. *(TAMAMLANDI)*
+1. **Kat 0 (Mimari Kararlar):** Tüm mimari kurallar kod yazılmadan (ADR belgeleriyle) alınır.
 2. **Kat 1 (Core Foundation):** Laravel kurulur, Test ve Olay (Event) altyapısı atılır.
 3. **Kat 2 (Güvenlik):** RBAC, Token ve API güvenlik kalkanları örülür.
 4. **Kat 3 (Ana Duvarlar):** Çoklu Dil, Kategori, Ürün, Varyant ve Arama Motoru (Elasticsearch/Meili) kurulur.

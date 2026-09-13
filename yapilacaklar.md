@@ -5,7 +5,7 @@
 > **Mimari:** Modular Monolith → Event-Driven → Plugin Architecture  
 > **Son Güncelleme:** _(her faz sonunda güncellenecek)_  
 > **Proje Durumu:** 🔴 Başlanmadı  
-> **Toplam Faz:** 35 (F0–F34)
+> **Toplam Faz:** 35 Faz / 36 Execution Step (F0–F34)
 
 ---
 
