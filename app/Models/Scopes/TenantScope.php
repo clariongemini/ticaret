@@ -3,6 +3,7 @@
 namespace App\Models\Scopes;
 
 use App\SharedKernel\Context\TenantContext;
+use App\Exceptions\TenantIsolationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
@@ -15,8 +16,16 @@ class TenantScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        if (TenantContext::getTenantId()) {
-            $builder->where($model->getTable() . '.tenant_id', TenantContext::getTenantId());
+        if (TenantContext::isSystemContext()) {
+            return;
         }
+
+        if (!TenantContext::getTenantId()) {
+            throw new TenantIsolationException(
+                "TenantScope is fail-closed. Cannot query [{$model->getTable()}] without an active TenantContext or SystemContext."
+            );
+        }
+
+        $builder->where($model->getTable() . '.tenant_id', TenantContext::getTenantId());
     }
 }

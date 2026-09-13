@@ -13,14 +13,15 @@ test('Store models enforce tenant_id in queries when TenantContext is active', f
     // We are simulating what TenantScope does.
     // In our codebase, TenantScope automatically adds `where tenant_id = ?` to queries.
     
-    // Set active tenant
+    // Set active tenant via executeForTenant
     $tenantId = (string) str()->ulid();
-    TenantContext::setTenantId($tenantId);
     
-    $query = Store::query()->toSql();
-    
-    // Regression assertion: The query MUST contain tenant_id constraint
-    expect($query)->toContain('tenant_id');
+    TenantContext::executeForTenant($tenantId, function () {
+        $query = Store::query()->toSql();
+        
+        // Regression assertion: The query MUST contain tenant_id constraint
+        expect($query)->toContain('tenant_id');
+    });
 });
 
 test('BaseModel subclasses strictly apply ULID traits', function () {
