@@ -7,7 +7,13 @@ class TenantContext
     private static ?string $tenantId = null;
     private static bool $isSystemContext = false;
 
-    public static function executeForTenant(string $tenantId, callable $callback)
+    /**
+     * @template T
+     * @param string $tenantId
+     * @param callable(): T $callback
+     * @return T
+     */
+    public static function executeForTenant(string $tenantId, callable $callback): mixed
     {
         $previousTenantId = self::$tenantId;
         $previousSystemState = self::$isSystemContext;
@@ -27,7 +33,12 @@ class TenantContext
         }
     }
 
-    public static function executeAsSystem(callable $callback)
+    /**
+     * @template T
+     * @param callable(): T $callback
+     * @return T
+     */
+    public static function executeAsSystem(callable $callback): mixed
     {
         $previousState = self::$isSystemContext;
         self::$isSystemContext = true;

@@ -11,7 +11,7 @@ trait TenantAware
     /**
      * Boot the tenant scope and mutation protections for this model.
      */
-    protected static function bootTenantAware()
+    protected static function bootTenantAware(): void
     {
         static::addGlobalScope(new TenantScope);
 
@@ -47,12 +47,11 @@ trait TenantAware
         });
     }
 
-    /**
      * Create a new Eloquent query builder for the model.
      * Prevents mass update of tenant_id unless in SystemContext.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder|static
+     * @return \Illuminate\Database\Eloquent\Builder<static>
      */
     public function newEloquentBuilder($query)
     {
