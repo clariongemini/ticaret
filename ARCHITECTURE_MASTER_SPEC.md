@@ -1,6 +1,6 @@
 # 🏛️ ANTIGRAVITY E-COMMERCE: ARCHITECTURE MASTER SPECIFICATION
 
-**Versiyon:** 1.2.0  
+**Versiyon:** 1.3.0  
 **Durum:** TASLAK (Hardening Phase - F0)  
 **Kapsam:** Kesin Mimari Kontratlar, Domain Sınırları ve Sistem İnvaryantları (Invariants)  
 
@@ -38,8 +38,14 @@ Sistem 4 ana domain grubundan oluşur:
 
 ## 06. Tenant / Store / Channel Model
 *   **İzolasyon Modeli:** Logical Separation (Shared Database, Separate Tenant_ID).
+*   **Defense-in-Depth İzolasyonu:** Sadece Global Scope yeterli değildir. İzolasyon şu hiyerarşiyle (defense-in-depth) %100 güvence altına alınır:
+    1. *Application Authorization* (Kullanıcının tenant yetkisi var mı?)
+    2. *Tenant Context* (Sistem o an hangi tenant için çalışıyor?)
+    3. *ORM/Global Scope* (Tüm sorgulara otomatik tenant_id eklenir)
+    4. *Repository/Query Constraints* (Query bazında second-check)
+    5. *Database Constraints* (Gerektiğinde schema bazında partition/tenant-id foreign keys)
+    6. *Audit* (Data sızıntısı logları)
 *   Veritabanındaki her tabloda zorunlu `tenant_id` kolonu bulunur. Global tablolar hariçtir.
-*   Sorgularda Global Scope ile `tenant_id` izolasyonu ORM/Query Builder seviyesinde zorunlu kılınmıştır.
 *   Hiyerarşi: `Tenant -> Store -> Channel -> Locale & Currency`
 
 ## 07. Catalog Domain
@@ -132,8 +138,10 @@ Feed streaming yeteneği ve Typo-tolerant arama altyapısı.
 Oauth2/JWT, ABAC/RBAC kontrolleri.
 
 ## 49. Webhooks & 50. Events
-*   **Idempotency & Replay:** Webhook teslimatları için katı tablo şeması. `event_id`, `provider_event_id`, `provider_name`, `event_type`, `signature`, `received_at`, `processed_at`, `attempt_count`, `next_retry_at`, `status`, `failure_reason`, `idempotency_key`, `payload_hash` zorunlu kolonlardır.
-*   **Deduplication:** `INSERT webhook_event WHERE provider_event_id UNIQUE` şeklinde Insert-first deduplication kuralı zorunludur. Aynı webhook event'inin birden fazla işlenmesi önlenir (duplicate ise ignore/replay-safe, değilse process mantığı).
+*   **Event Taxonomy & Contract:** Tüm internal domain event'leri katı bir şemaya uymak zorundadır. Sadece *business-significant* (OrderPlaced) event'ler fırlatılır. İçerik şeması: `event_id`, `event_type`, `event_version`, `aggregate_id`, `aggregate_type`, `tenant_id`, `occurred_at`, `correlation_id`, `causation_id`, `producer`, `payload`, `schema_version`.
+*   **At-Least-Once Delivery & Deduplication:** Olayların birden çok kez ulaşabileceği varsayımıyla (at-least-once) tüm event consumer'lar kendi idempotent mekanizmalarına sahip olmalıdır.
+*   **Webhook Idempotency & Replay:** Webhook teslimatları için katı tablo şeması. `event_id`, `provider_event_id`, `provider_name`, `event_type`, `signature`, `received_at`, `processed_at`, `attempt_count`, `next_retry_at`, `status`, `failure_reason`, `idempotency_key`, `payload_hash` zorunlu kolonlardır.
+*   **Webhook Deduplication:** `INSERT webhook_event WHERE provider_event_id UNIQUE` şeklinde Insert-first deduplication kuralı zorunludur. Aynı webhook event'inin birden fazla işlenmesi önlenir (duplicate ise ignore/replay-safe, değilse process mantığı).
 
 ## 51. Outbox & 52. Queues
 Transactional Outbox Pattern zorunluluğu.
@@ -155,7 +163,13 @@ Eager Loading zorunluluğu, Tracing ve merkezi loglama.
 *   Sistem invariant'larını test eden testler (Inventory concurrency, payment idempotency, webhook replay, tenant isolation, B2B credit race, coupon race, authorization vb.) birincil kalite ölçütüdür.
 
 ## 71-83. CI/CD, Deployment, Definitions of Done & Architecture Gates
-Sıfır kesinti, strict code review ve statik analiz süreçleri.
+*   Sıfır kesinti, strict code review ve statik analiz süreçleri.
+*   **CI/CD Architectural Enforcement (Linting):** Dokümandaki mimari sınırların kodlama sırasında ihlal edilmesini engellemek için CI pipeline'ı **Deptrac** ve **PHPStan Architecture Rules** ile donatılacaktır. Bu araçlar şunları otomatik olarak reddedecektir:
+    *   Cross-module DB access (Bir modülün diğerinin DB tablosuna doğrudan okuma/yazma yapması)
+    *   `tenant_id` scope missing (Tenant-aware tablolara Tenant Scope'suz erişim)
+    *   `Idempotency-Key` requirement fail (Kritik transaction mutasyonlarında)
+    *   Domain modüllerinin Infrastructure katmanına dependency oluşturması
+    *   Controller katmanından Database'e doğrudan erişim.
 
 ---
-**KARAR:** Bu belge (v1.2.0), sistemin Hardening aşamasından geçmiş teknik anayasasıdır. Kodlama aşamasında F0 - F34 arasındaki modüller bu kurallara harfiyen uyarak inşa edilecektir.
+**KARAR:** Bu belge (v1.3.0), sistemin Hardening aşamasından geçmiş teknik anayasasıdır. Kodlama aşamasında F0 - F34 arasındaki modüller bu kurallara harfiyen uyarak inşa edilecektir.

@@ -22,156 +22,87 @@ Bu dosya **master kontrol listesidir.** Her fazın ayrıntılı görevleri `/doc
 
 ---
 
-## 🏠 İNŞAAT HİYERARŞİSİ (YÜRÜTME SIRASI)
+## 🏠 İNŞAAT HİYERARŞİSİ VE SÜRÜM PLANI (V1 / V1.5 / V2)
 
-> **Kural:** Bir sonraki katmana geçmek için önceki katman tamamen bitmeli.  
-> Aşağıdaki sıra **zorunludur** — hiçbir adım atlanamaz.
-
----
-
-### 🟫 KAT 0 — ZEMİN ETÜDÜ (Karar & Tasarım)
-> _Kazma bile çalınmadan tüm kararlar alınır. Kod yoktur._
-
-| Sıra | Faz | Dosya | Durum |
-|------|-----|-------|-------|
-| 1 | **F0** — Mimari Analiz & ADR | [F0-mimari-analiz.md](docs/planlama/F0-mimari-analiz.md) | 🔴 |
-
-**Bu katman bitmeden bir sonraki katmana GEÇİLEMEZ.**  
-F0 sonunda 25 Architecture Gate sorusunun tamamı cevaplanmış olmalıdır.
+> **Kural:** Kapsam çok geniş olduğu için geliştirme süreci 3 büyük Sürüm (Release) halinde planlanmıştır. 
+> Bir sonraki sürüme geçmek için önceki sürüm tamamen bitmeli ve teste çıkmalıdır.
 
 ---
 
-### 🟥 KAT 1 — TEMEL (Foundation)
-> _Binanın betonu. Her şey buraya oturacak. En ince detayına kadar doğru olmalı._
+### 🚀 SÜRÜM V1: COMMERCE CORE & OS FOUNDATION
+Bu sürüm sistemin sağlam çalışması için gereken minimum iskelettir.
 
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 2 | **F1** — Core Foundation | [F1-foundation.md](docs/planlama/F1-foundation.md) | 🔴 | Framework, dizin yapısı, DI, event bus iskeleti |
-| 3 | **F2** — Database Tasarımı | [F2-database.md](docs/planlama/F2-database.md) | 🔴 | Tüm tablolar + çeviri tabloları + SEO tabloları + slug tabloları BURADA tasarlanır |
-| 4 | **F18** — API Standartları | [F18-api.md](docs/planlama/F18-api.md) | 🔴 | İlk endpoint yazılmadan format standartları belirlenmeli |
-| 5 | **F19** — Plugin System & Event Bus | [F19-plugin-event.md](docs/planlama/F19-plugin-event.md) | 🔴 | Ödeme/kargo/bildirim pluginleri buna bağlı — erken kurulmalı |
+#### Kat 0 & 1 — Temel ve Mimari
+| Sıra | Faz | Dosya | Durum | Neden V1? |
+|------|-----|-------|-------|-----------|
+| 1 | **F0** — Mimari Analiz & ADR | [F0-mimari-analiz.md](docs/planlama/F0-mimari-analiz.md) | 🔴 | Mimari onayı |
+| 2 | **F1** — Core Foundation | [F1-foundation.md](docs/planlama/F1-foundation.md) | 🔴 | Framework, CI/CD, Event Bus |
+| 3 | **F2** — Database Tasarımı | [F2-database.md](docs/planlama/F2-database.md) | 🔴 | Şema tasarımı |
+| 4 | **F18** — API Standartları | [F18-api.md](docs/planlama/F18-api.md) | 🔴 | Endpoint kuralları |
+| 5 | **F19** — Plugin & Event | [F19-plugin-event.md](docs/planlama/F19-plugin-event.md) | 🔴 | Olay mimarisi |
 
-> ⚠️ **F2 kritik not:** Lokalizasyon çeviri tabloları (`kategori_ceviri`, `urun_ceviri`, ...), SEO meta tabloları, slug ve redirect tabloları **F2'de tasarlanır**. F15/F16 bu tabloları implement eder, ama şema burada belirlenir.
+#### Kat 2 — Güvenlik ve Gözlem (Observability)
+| Sıra | Faz | Dosya | Durum | Neden V1? |
+|------|-----|-------|-------|-----------|
+| 6 | **F3** — Auth & RBAC | [F3-authentication.md](docs/planlama/F3-authentication.md) | 🔴 | Güvenlik kalkanı |
+| 7 | **F22-A** — Security Middleware | [F22-security.md](docs/planlama/F22-security.md) | 🔴 | CSRF, Rate Limiting |
+| 8 | **F23** — Observability | [F23-performance.md](docs/planlama/F23-performance.md) | 🔴 | Log, Metric, Trace (Erken kurulmalı) |
 
----
+#### Kat 3 — Katalog ve Ticaret Temelleri
+| Sıra | Faz | Dosya | Durum | Neden V1? |
+|------|-----|-------|-------|-----------|
+| 9 | **F15** — Localization | [F15-localization.md](docs/planlama/F15-localization.md) | 🔴 | Çoklu dil |
+| 10 | **F4** — Catalog | [F4-catalog.md](docs/planlama/F4-catalog.md) | 🔴 | Kategori/Marka |
+| 11 | **F5** — Product & Variant | [F5-product-variant.md](docs/planlama/F5-product-variant.md) | 🔴 | Ürünler |
+| 12 | **F6** — Inventory | [F6-inventory.md](docs/planlama/F6-inventory.md) | 🔴 | Stok (Race Condition kilitleri) |
 
-### 🟧 KAT 2 — KOLONLAR (Core Infrastructure)
-> _Her şeyin üstüne oturduğu taşıyıcı kolonlar. Auth ve güvenlik temeli._
+#### Kat 4 — Çekirdek Akış (Checkout & Sipariş)
+| Sıra | Faz | Dosya | Durum | Neden V1? |
+|------|-----|-------|-------|-----------|
+| 13 | **F7** — Cart | [F7-cart.md](docs/planlama/F7-cart.md) | 🔴 | Sepet |
+| 14 | **F9** — Payment | [F9-payment.md](docs/planlama/F9-payment.md) | 🔴 | Ödeme altyapısı |
+| 15 | **F8** — Checkout | [F8-checkout.md](docs/planlama/F8-checkout.md) | 🔴 | Ödeme + Sipariş oluşturma |
+| 16 | **F10** — Order Domain | [F10-order.md](docs/planlama/F10-order.md) | 🔴 | Sipariş yönetimi |
+| 17 | **F11** — Shipping | [F11-shipping.md](docs/planlama/F11-shipping.md) | 🔴 | Teslimat |
+| 18 | **F12** — Tax & Invoice (Temel) | [F12-tax-invoice.md](docs/planlama/F12-tax-invoice.md) | 🔴 | Vergi |
 
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 6 | **F3** — Authentication & RBAC | [F3-authentication.md](docs/planlama/F3-authentication.md) | 🔴 | İlk API endpoint güvenli olmak zorunda |
-| 7 | **F22-A** — Güvenlik Temeli | [F22-security.md](docs/planlama/F22-security.md) | 🔴 | CSRF, rate limiting, input validation middleware — bunlar F3 ile birlikte kurulur. Tam audit F22 olarak sonda yapılır. |
-
-> **F22 iki aşamalıdır:**  
-> **F22-A (burada):** Güvenlik middleware altyapısı (CSRF, rate limit, input validation)  
-> **F22-B (Kat 9):** Tam OWASP audit + penetration test
-
----
-
-### 🟨 KAT 3 — ANA DUVARLAR (Core Commerce Domains)
-> _Sistemin ticaret kalbi. Sıra önemli: önce dil mimarisi, sonra ürünler._
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 8 | **F15** — Localization (Çoklu Dil) | [F15-localization.md](docs/planlama/F15-localization.md) | 🔴 | ⚠️ **Ürün girilmeden önce TR/EN dil mimarisi kurulmalı!** Kategori/ürün oluşturulurken çeviri tabloları hazır olmalı. |
-| 9 | **F4** — Catalog (Kategori/Marka) | [F4-catalog.md](docs/planlama/F4-catalog.md) | 🔴 | Ürünlerin bağlı olduğu yapı önce kurulur |
-| 10 | **F5** — Product & Variant & Attribute | [F5-product-variant.md](docs/planlama/F5-product-variant.md) | 🔴 | Sistemin en kritik modülü |
-| 11 | **F6** — Inventory (Stok) | [F6-inventory.md](docs/planlama/F6-inventory.md) | 🔴 | Ürün var ama stok yoksa satış olmaz |
-| 12 | **F28** — Search (Arama Motoru) | [F28-search.md](docs/planlama/F28-search.md) | 🔴 | ⭐ Ürün & stok var → arama indexi kurulur. F31 AI asistan bu sisteme bağlı. |
-
-> ⚠️ **F15 kritik uyarı:** Eski planda F15 yanlışlıkla F14 (CMS) sonrasına yerleştirilmişti.  
-> F15 F4'ten **önce** gelmelidir. Çeviri mimarisi ürün domaininden önce hazır olmalı.
-
----
-
-### 🟩 KAT 4 — TİCARET AKIŞ DUVARLARI (Commerce Flow)
-> _Para ve ürün el değiştiren süreçler. Sıra kesin olarak sabit._
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 13 | **F32** — B2B Corporate | [F32-b2b-corporate.md](docs/planlama/F32-b2b-corporate.md) | 🔴 | ⭐ YENİ — B2B hesapları ve özel fiyatlama kuralları sepete girmeden önce bilinmeli |
-| 14 | **F7** — Cart (Sepet) | [F7-cart.md](docs/planlama/F7-cart.md) | 🔴 | Checkout'tan önce sepet |
-| 15 | **F13** — Rule Engine | [F13-promotion.md](docs/planlama/F13-promotion.md) | 🔴 | Kupon ve kural motoru sepete uygulanır — checkout'tan önce |
-| 16 | **F9** — Payment Architecture | [F9-payment.md](docs/planlama/F9-payment.md) | 🔴 | Checkout ödeme sistemini çağırır — önce kurulmalı |
-| 17 | **F8** — Checkout | [F8-checkout.md](docs/planlama/F8-checkout.md) | 🔴 | Sepet + kampanya + ödeme + kargo + vergi entegrasyonu |
-| 18 | **F10** — Order Domain | [F10-order.md](docs/planlama/F10-order.md) | 🔴 | Checkout'tan sipariş doğar |
-| 19 | **F33** — Subscription | [F33-subscription.md](docs/planlama/F33-subscription.md) | 🔴 | ⭐ YENİ — Abonelik sistemi sipariş ve ödeme altyapısını kullanarak tekrar eden siparişler üretir |
-| 20 | **F11** — Shipping | [F11-shipping.md](docs/planlama/F11-shipping.md) | 🔴 | Sipariş sonrası kargolama |
-| 21 | **F12** — Tax & Invoice | [F12-tax-invoice.md](docs/planlama/F12-tax-invoice.md) | 🔴 | Sipariş + vergi = fatura |
-| 22 | **F29** — Notification System | [F29-notification.md](docs/planlama/F29-notification.md) | 🔴 | ⭐ Sipariş/ödeme/kargo akışı bitti → bildirim katmanı kurulur |
-
-> ⚠️ **F9 (Payment) F8 (Checkout)'tan önce gelir.** Eski planda bu ters görünüyordu.  
-> Checkout, payment gateway'i çağırır. Gateway interface önce hazır olmalı.
+#### Kat 5 — Yönetim ve API
+| Sıra | Faz | Dosya | Durum | Neden V1? |
+|------|-----|-------|-------|-----------|
+| 19 | **F20** — Admin Panel | [F20-admin-panel.md](docs/planlama/F20-admin-panel.md) | 🔴 | Yönetim |
+| 20 | **F34** — Webhooks Out | [F34-webhook-out.md](docs/planlama/F34-webhook-out.md) | 🔴 | Dışa veri (Event Driven) |
+| 21 | **F21** — Core Testing | [F21-testing.md](docs/planlama/F21-testing.md) | 🔴 | V1 için tam test coverage |
 
 ---
 
-### 🟦 KAT 5 — İÇERİK & SEO KATMANI
-> _Bina içinin kaplaması ve dış cephesi. Görünürlük burada kazanılır._
+### 📈 SÜRÜM V1.5: GROWTH & SCALE
+Sistem V1 ile ayağa kalktıktan sonra pazarlama ve SEO modülleri eklenir.
 
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 21 | **F14** — CMS | [F14-cms.md](docs/planlama/F14-cms.md) | 🔴 | Sayfa ve blog içerikleri |
-| 22 | **F16** — SEO Architecture | [F16-seo.md](docs/planlama/F16-seo.md) | 🔴 | Schema.org, canonical, sitemap, robots |
-| 23 | **F25** — SEO Automation & Intelligence | [F25-seo-automation.md](docs/planlama/F25-seo-automation.md) | 🔴 | ⭐ Otomatik SEO üretimi, öneri motoru, SERP önizleme |
-| 24 | **F17** — Google Merchant Center | [F17-merchant-center.md](docs/planlama/F17-merchant-center.md) | 🔴 | SEO + Ürün verisi hazırsa Merchant feed üretilir |
-
-> ⚠️ **F16 ve F25 ayrı fazlar ama birbirini takip eder.**  
-> F16: SEO altyapısı (teknik).  
-> F25: SEO zekası (otomasyon + öneri + denetim).
-
----
-
-### 🟪 KAT 6 — MÜŞTERİ DENEYİMİ & AI KATMANI
-> _Binanın iç dekorasyonu ve akıllı kapıcısı. Müşteriyi tutacak, geri getirecek, yönlendirecek sistemler._
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 25 | **F27** — Customer Experience | [F27-customer-experience.md](docs/planlama/F27-customer-experience.md) | 🔴 | Wishlist, Review, Öneri Motoru, Back-in-Stock, Price Drop Alert |
-| 26 | **F31** — AI Commerce Assistant | [F31-ai-commerce-assistant.md](docs/planlama/F31-ai-commerce-assistant.md) | 🔴 | ⭐ YENİ — Ürün veritabanına bağlı AI asistan. F28 (Search) hazır → RAG mimarisi kurulabilir. |
+| Sıra | Faz | Dosya | Durum | İçerik |
+|------|-----|-------|-------|--------|
+| 22 | **F28** — Search Engine | [F28-search.md](docs/planlama/F28-search.md) | 🔴 | Elasticsearch/Meilisearch |
+| 23 | **F13** — Rule Engine | [F13-promotion.md](docs/planlama/F13-promotion.md) | 🔴 | Kupon ve İndirimler |
+| 24 | **F14** — CMS | [F14-cms.md](docs/planlama/F14-cms.md) | 🔴 | İçerik ve Blog |
+| 25 | **F16** — SEO Arch | [F16-seo.md](docs/planlama/F16-seo.md) | 🔴 | Temel SEO |
+| 26 | **F25** — SEO Auto | [F25-seo-automation.md](docs/planlama/F25-seo-automation.md) | 🔴 | SEO Otomasyon |
+| 27 | **F29** — Notifications | [F29-notification.md](docs/planlama/F29-notification.md) | 🔴 | İletişim (Mail, SMS) |
+| 28 | **F27** — Customer Exp | [F27-customer-experience.md](docs/planlama/F27-customer-experience.md) | 🔴 | Wishlist, Yorumlar |
+| 29 | **F30** — Import/Export | [F30-import-export-reporting.md](docs/planlama/F30-import-export-reporting.md) | 🔴 | Raporlama ve dışa aktarım |
 
 ---
 
-### ⬜ KAT 7 — KONTROL MERKEZİ, MOBİL & VERİ AKTARIMI
-> _Bina yönetim sistemi, harici bağlantılar ve içeri/dışarı veri akışı._
+### 🏢 SÜRÜM V2: ENTERPRISE & B2B AI
+Sistemin Pazar yeri, B2B veya SaaS platformuna dönüştüğü son evre.
 
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 29 | **F20** — Admin Panel | [F20-admin-panel.md](docs/planlama/F20-admin-panel.md) | 🔴 | Tüm domain'ler hazır → admin UI üstten gelir |
-| 30 | **F26** — Mobile Integration | [F26-mobile.md](docs/planlama/F26-mobile.md) | 🔴 | API hazır → mobil özel katman eklenir |
-| 31 | **F30** — Import/Export & Raporlama | [F30-import-export-reporting.md](docs/planlama/F30-import-export-reporting.md) | 🔴 | Toplu ürün import, satış/stok raporları. |
-| 32 | **F34** — Webhooks Out | [F34-webhook-out.md](docs/planlama/F34-webhook-out.md) | 🔴 | ⭐ YENİ — Sistemdeki olayların Logo, ERP, Zapier'e anlık fırlatılması. |
-
----
-
-### 🔲 KAT 8 — PERFORMANS & İZLEME
-> _Binanın altyapı sistemleri test ediliyor. Elektrik, su, ısıtma çalışıyor mu?_
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 33 | **F23** — Performance & Observability | [F23-performance.md](docs/planlama/F23-performance.md) | 🔴 | N+1, cache, monitoring — tüm domain'ler yazıldıktan sonra audit |
-
----
-
-### 🔷 KAT 9 — DENETİM & GÜVENLİK AUDİTİ
-> _Yapı denetimi. Bina oturmaya açılmadan tüm güvenlik kontrolleri._
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 34 | **F21** — Test (Tam Kapsam) | [F21-testing.md](docs/planlama/F21-testing.md) | 🔴 | Concurrency, security, E2E, performance testleri |
-| 35 | **F22-B** — Security Full Audit | [F22-security.md](docs/planlama/F22-security.md) | 🔴 | OWASP Top 10 tam denetim, penetration test |
-
-> **Not:** F21 test **altyapısı** (factory, fake gateway, test DB) F1'de kurulur.  
-> Ancak tam test **coverage**'ı (tüm modüller için) burada tamamlanır.
-
----
-
-### 🏁 KAT 10 — ANAHTAR TESLİM
-> _Son kontrol, imza, teslim._
-
-| Sıra | Faz | Dosya | Durum | Neden burada? |
-|------|-----|-------|-------|--------------|
-| 36 | **F24** — Production Deployment | [F24-deployment.md](docs/planlama/F24-deployment.md) | 🔴 | Her şey hazır → production'a taşı |
+| Sıra | Faz | Dosya | Durum | İçerik |
+|------|-----|-------|-------|--------|
+| 30 | **F32** — B2B Corporate | [F32-b2b-corporate.md](docs/planlama/F32-b2b-corporate.md) | 🔴 | Açık hesap, Firma kurgusu |
+| 31 | **F33** — Subscription | [F33-subscription.md](docs/planlama/F33-subscription.md) | 🔴 | Tekrarlayan ödemeler |
+| 32 | **F17** — Merchant Center | [F17-merchant-center.md](docs/planlama/F17-merchant-center.md) | 🔴 | Google Feed & Satıcı Katmanı |
+| 33 | **F31** — AI Commerce | [F31-ai-commerce-assistant.md](docs/planlama/F31-ai-commerce-assistant.md) | 🔴 | RAG Yapay Zeka (Tool calling) |
+| 34 | **F26** — Mobile API | [F26-mobile.md](docs/planlama/F26-mobile.md) | 🔴 | Mobil spesifik optimizasyonlar |
+| 35 | **F22-B** — Full Security Audit | [F22-security.md](docs/planlama/F22-security.md) | 🔴 | OWASP ve Penetrasyon |
+| 36 | **F24** — Final Prod Deploy | [F24-deployment.md](docs/planlama/F24-deployment.md) | 🔴 | V2 Anahtar teslim |
 
 ---
 

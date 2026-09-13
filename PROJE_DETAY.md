@@ -61,21 +61,33 @@ Geleneksel e-ticaret sitelerinde bulunmayan, ancak bu projede standart olarak ge
 
 ---
 
-## 📚 5. Projenin Yürütme ve İnşaat Hiyerarşisi
+## 📚 5. Projenin Yürütme ve İnşaat Hiyerarşisi (Sürüm Planı)
 
-Projenin inşası, bir gökdelenin inşası kadar katı ve disiplinli bir **10 Katmanlı Hiyerarşiyle (35 Faz)** yürütülür. Temel atılmadan kolon dikilmez, duvar örülmeden sıva yapılmaz.
+Projenin kapsamı oldukça geniş olduğu için geliştirme süreci 10 Katmanlı hiyerarşiden oluşan **3 Sürüm (Release)** halinde bölümlenmiştir. Gerçekçi bir 'Go-to-market' stratejisi için önce temel sürüm (V1) çıkarılır, ardından modüller eklenir.
 
-*Aşağıdaki sıra, geliştirme sürecinin anayasasıdır:*
+### 🚀 V1 (Commerce Core & OS Foundation)
+Bu sürüm sistemin sağlam çalışması için gereken iskelettir.
+*   Foundation (Mimari, DB, Event Bus)
+*   Auth / RBAC & Audit Logging (Güvenlik)
+*   Catalog, Product, Variant (Katalog)
+*   Inventory & Pricing (Stok ve Fiyat)
+*   Cart, Checkout, Payment, Order (Ticaret Akışı)
+*   Customer & Shipping (Müşteri ve Kargo)
+*   Webhook & Observability (Dış Entegrasyon ve İzlenebilirlik)
 
-1. **Kat 0 (Mimari Kararlar):** Tüm mimari kurallar kod yazılmadan (ADR belgeleriyle) alınır.
-2. **Kat 1 (Core Foundation):** Laravel kurulur, Test ve Olay (Event) altyapısı atılır.
-3. **Kat 2 (Güvenlik):** RBAC, Token ve API güvenlik kalkanları örülür.
-4. **Kat 3 (Ana Duvarlar):** Çoklu Dil, Kategori, Ürün, Varyant ve Arama Motoru (Elasticsearch/Meili) kurulur.
-5. **Kat 4 (Ticaret Akışı):** B2B, Sepet, Promosyon (Rule Engine), Kargo, Vergi, Checkout, Sipariş, Abonelik ve Bildirim sistemi sırasıyla bağlanır.
-6. **Kat 5 & 6 (İçerik, SEO ve AI):** İçerik yönetimi, SEO otomasyonu, Müşteri Deneyimi (Wishlist vb.) ve AI Asistan devreye alınır.
-7. **Kat 7 (Yönetim & Dışa Açılım):** Admin Paneli, Mobil Entegrasyon ve Webhook'lar inşa edilir.
-8. **Kat 8 & 9 (Denetim):** Performans N+1 testleri ve OWASP siber güvenlik testleri yapılır.
-9. **Kat 10:** Anahtar Teslim ve Production'a Çıkış (Deployment).
+### 📈 V1.5 (Growth & Scale)
+Sistem ayağa kalktıktan sonra pazarlama ve operasyonel modüller eklenir.
+*   Promotion, Coupon (Kural Motoru ve İndirimler)
+*   CMS, SEO, Search (Arama Motoru ve İçerik)
+*   Invoice, RMA (Fatura ve İade Süreçleri)
+
+### 🏢 V2 (Enterprise & B2B AI)
+Sistemin Pazar yeri, Toptan veya SaaS seviyesine çıkacağı nihai sürüm.
+*   B2B Corporate Modülü (Açık hesap, Şirketler)
+*   Subscription & Recurring Payment (Abonelikler)
+*   Merchant Center (Çoklu Satıcı Desteği)
+*   AI Commerce & RAG (Yapay Zeka Satış Asistanı)
+*   Mobile API & Advanced Rule Engine
 
 ---
 
