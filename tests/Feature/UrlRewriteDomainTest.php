@@ -159,4 +159,49 @@ class UrlRewriteDomainTest extends TestCase
             $this->assertMatchesRegularExpression('/^[0-9A-Z]{26}$/i', $rewrite->id);
         });
     }
+
+    public function test_cannot_update_url_rewrite_target_to_cross_tenant_via_model_save()
+    {
+        $tenant1Rewrite = null;
+        $tenant2Cat = null;
+
+        // Create a valid rewrite under tenant1
+        TenantContext::executeForTenant($this->tenant1->id, function () use (&$tenant1Rewrite) {
+            $cat = Category::create(['name' => ['en' => 'T1 Cat'], 'slug' => ['en' => 't1-cat']]);
+            $tenant1Rewrite = $cat->urlRewrites()->create(['locale' => 'en', 'slug' => 't1-slug']);
+        });
+
+        // Create a category under tenant2
+        TenantContext::executeForTenant($this->tenant2->id, function () use (&$tenant2Cat) {
+            $tenant2Cat = Category::create(['name' => ['en' => 'T2 Cat'], 'slug' => ['en' => 't2-cat']]);
+        });
+
+        $this->expectException(\App\Exceptions\TenantIsolationException::class);
+        $this->expectExceptionMessage('Cross-tenant UrlRewrite is blocked');
+
+        // Attempt to point the rewrite to tenant2's category via model->save() path
+        TenantContext::executeForTenant($this->tenant1->id, function () use ($tenant1Rewrite, $tenant2Cat) {
+            $tenant1Rewrite->target_id = $tenant2Cat->id;
+            $tenant1Rewrite->target_type = Category::class;
+            $tenant1Rewrite->save();
+        });
+    }
+
+    public function test_cannot_bulk_update_url_rewrite_target_id()
+    {
+        $tenant1Rewrite = null;
+
+        TenantContext::executeForTenant($this->tenant1->id, function () use (&$tenant1Rewrite) {
+            $cat = Category::create(['name' => ['en' => 'T1 Cat2'], 'slug' => ['en' => 't1-cat2']]);
+            $tenant1Rewrite = $cat->urlRewrites()->create(['locale' => 'en', 'slug' => 't1-slug2']);
+        });
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage("Bulk update of target_id/target_type on url_rewrites is prohibited.");
+
+        TenantContext::executeForTenant($this->tenant1->id, function () use ($tenant1Rewrite) {
+            UrlRewrite::whereKey($tenant1Rewrite->id)->update(['target_id' => 'some-other-id']);
+        });
+    }
 }
+
