@@ -1,10 +1,13 @@
-# 🏛️ ANTIGRAVITY E-COMMERCE: ARCHITECTURE MASTER SPECIFICATION
+# 🏛️ ENTERPRISE E-COMMERCE: ARCHITECTURE MASTER SPECIFICATION
 
-**Versiyon:** 1.3.0  
-**Durum:** TASLAK (Hardening Phase - F0)  
-**Kapsam:** Kesin Mimari Kontratlar, Domain Sınırları ve Sistem İnvaryantları (Invariants)  
+> **System Architect:** Ulaş Kaşıkcı
+> **Versiyon:** 1.3.0
+> **Durum:** ONAYLI (Foundation Implemented)
+> **Tarih:** 2026
 
-Bu belge, Antigravity E-Commerce platformunun inşasında yapay zeka ve mühendislik ekipleri tarafından uyulması **ZORUNLU** olan anayasal kuralları tanımlar. `PROJE_DETAY.md` dosyasındaki vizyonun uygulanabilir, test edilebilir ve ölçülebilir teknik spesifikasyonudur.
+## 1. MİMARİ ANAYASA (Core Tenets)
+
+Bu belge, Enterprise E-Commerce platformunun inşasında uyulması **ZORUNLU** olan anayasal kuralları tanımlar. `PROJE_DETAY.md` dosyasındaki vizyonun uygulanabilir, test edilebilir ve ölçülebilir teknik spesifikasyonudur.
 
 > [!CAUTION]
 > Bu belgedeki kurallar esnetilemez. Mimari sınırları (Bounded Contexts) ihlal eden, doğrudan veritabanı bağlantısı kuran veya event-driven yapıyı bozan hiçbir kod (Pull Request) kabul edilmeyecektir.

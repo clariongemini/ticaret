@@ -1,4 +1,4 @@
-# 🚀 ANTIGRAVITY E-COMMERCE CORE PLATFORM (Enterprise Edition)
+# 🚀 ENTERPRISE E-COMMERCE CORE PLATFORM
 
 **Sürüm:** 1.0.0 (Mimari Tasarım Aşaması)  
 **Tarih:** Eylül 2026  

@@ -1,66 +1,122 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Enterprise E-Commerce Core Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**System Architect:** Ulaş Kaşıkcı  
+**Version:** 1.3.0 (Foundation Implemented)  
+**Architecture:** Modular Monolith (Domain-Driven Design)
 
-## About Laravel
+An enterprise-grade, high-performance, and fully scalable e-commerce backend built with modern PHP. Designed to handle high-concurrency operations, complex inventory reservations, and distributed workflows.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🏛️ System Architecture
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+This project strictly adheres to a **Modular Monolithic** architecture driven by Domain-Driven Design (DDD). The architecture enforces strict boundaries using `Deptrac`, static analysis via `PHPStan` (Level 9), and continuous testing via `Pest`.
 
-## Learning Laravel
+### Architectural Map
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```mermaid
+graph TD
+    %% Core System
+    Client[Client / Web / Mobile] --> API[API Gateway / Endpoints]
+    
+    %% API Layer
+    API --> ApplicationLayer[Application Layer]
+    
+    %% Application Layer Contexts
+    subgraph Modular Monolith
+        ApplicationLayer --> Auth[Authentication & Identity]
+        ApplicationLayer --> Catalog[Product Catalog]
+        ApplicationLayer --> Inventory[Inventory & Reservations]
+        ApplicationLayer --> Cart[Cart & Checkout]
+        ApplicationLayer --> Payment[Payment Gateway]
+        ApplicationLayer --> Order[Order Management]
+        
+        %% Domain Communication
+        Cart -.->|Emits Event| Inventory
+        Cart -.->|Emits Event| Payment
+        Payment -.->|Emits Event| Order
+        Order -.->|Syncs State| Inventory
+        
+        %% Shared Resources
+        Auth & Catalog & Inventory & Cart & Payment & Order --> SharedKernel[Shared Kernel]
+    end
+    
+    %% Infrastructure Layer
+    SharedKernel --> Infra[Infrastructure Layer]
+    Infra --> DB[(MySQL 8.0)]
+    Infra --> Redis[(Redis Cache/Queue)]
+    Infra --> Elasticsearch[(Elasticsearch)]
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Technology Stack
 
-## Laravel Sponsors
+- **Core:** Laravel 11.x, PHP 8.3
+- **Database:** MySQL 8.0+ (Strict standard)
+- **Primary Keys:** ULID (Universally Unique Lexicographically Sortable Identifier)
+- **Static Analysis:** PHPStan (Level 9), Larastan
+- **Architecture Enforcement:** Deptrac
+- **Testing:** Pest PHP
+- **CI/CD:** GitHub Actions (Fail-Closed Architecture)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🗺️ Project Execution Roadmap (Phases)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+The project is structured into logical, distinct implementation phases. Each phase acts as a strict gate.
 
-## Contributing
+| Phase | Title | Status | Description |
+|---|---|---|---|
+| **F0** | Architecture & Specifications | ✅ Completed | Master Architecture specification, invariant rules, and tech stack finalized. |
+| **F1** | Core Foundation | ✅ Completed | Framework setup, CI/CD pipeline, Pest, PHPStan (L9), Deptrac, ULIDs, and base tenant context. |
+| **F2** | Database & Tenancy Hardening | 🏗️ Pending | Table schemas, indexing strategies, robust multi-tenancy implementation. |
+| **F3** | Authentication & Identity | ⏳ Planned | User, Admin, and Role-Based Access Control (RBAC). |
+| **F4** | Catalog & Products | ⏳ Planned | Core product data, categories, variant engine. |
+| **F5** | Inventory & Reservation | ⏳ Planned | Immutable ledger system, concurrency-safe stock reservation, available-to-promise logic. |
+| **F6-F9** | Cart, Checkout, Payment | ⏳ Planned | Stateful checkout process, idempotency layers, external payment gateway integrations. |
+| **F10+** | Post-Checkout Ecosystem | ⏳ Planned | Order fulfillment, logistics, notifications, and analytics. |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🔒 Architectural Tenets
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. **Strict MySQL Standard:** All relational structured data uses MySQL 8.0. No mixed PostgreSQL operations.
+2. **Immutable Inventory Ledger:** Stock changes are append-only.
+3. **Fail-Closed Integration:** If static analysis (`phpstan`), boundary checks (`deptrac`), or automated tests (`pest`) fail, the build fails.
+4. **Idempotent APIs:** All mutation operations require `Idempotency-Key` headers to safely retry network errors.
+5. **No Cross-Module Database Joins:** A domain cannot join another domain's tables directly. Data aggregation must happen at the application layer or via read-models.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## ⚙️ Development Environment
 
-## License
+### Prerequisites
+- PHP >= 8.3
+- Composer >= 2.7
+- MySQL >= 8.0
+- Redis
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/clariongemini/ticaret.git
+cd ticaret
+
+# 2. Install dependencies
+composer install
+
+# 3. Setup environment
+cp .env.example .env
+php artisan key:generate
+
+# 4. Run tests and static analysis
+./vendor/bin/pest
+./vendor/bin/phpstan analyse
+./vendor/bin/deptrac analyse
+```
+
+---
+
+*Designed and Architected by Ulaş Kaşıkcı*
