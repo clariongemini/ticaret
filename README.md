@@ -1,160 +1,66 @@
-# 🚀 Antigravity E-Commerce Core Platform
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-> **System Architect:** Ulaş Kaşıkcı  
-> **Phase:** 0 (Architecture & Foundation)  
-> **Type:** Enterprise-Grade Commerce Core (B2B, B2C, SaaS)  
-> **Stack:** PHP, MySQL 8+, Redis, Elasticsearch
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-![Architecture](https://img.shields.io/badge/Architecture-Modular_Monolith-blue)
-![API](https://img.shields.io/badge/API-Headless_|_REST-green)
-![DB](https://img.shields.io/badge/Database-MySQL_8%2B-orange)
-![Security](https://img.shields.io/badge/Security-OWASP_Compliant-red)
+## About Laravel
 
----
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-## 📖 Executive Summary
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-**Antigravity E-Commerce** is a next-generation backend commerce core designed for hyper-scalability, strict engineering invariants, and complete platform agnosticism. 
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-Rejecting the traditional monolithic spaghetti architecture, Antigravity implements a **Strict Modular Monolith** driven by an internal **Event Bus** and **Transactional Outbox**. It provides a 100% **Headless & API-First** ecosystem where Omnichannel Storefronts, Mobile Apps, B2B Portals, and AI Commerce Agents interact with the exact same core truth.
+## Learning Laravel
 
----
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## 🏛️ System Architecture & Context Map
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-The architecture enforces strict domain isolation. Bounded contexts (e.g., Catalog, Order, Inventory) own their respective database tables and communicate purely via API contracts or asynchronous Domain Events.
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-```mermaid
-graph TD
-    %% Client Layer
-    subgraph Clients ["Client Layer (Agnostic)"]
-        W[Web Storefront SSR]
-        M[Mobile App]
-        B[B2B Corporate Portal]
-        A[AI Commerce Agent]
-    end
+## Laravel Sponsors
 
-    %% Gateway Layer
-    API[API Gateway / Auth & RBAC]
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-    %% Core Domains
-    subgraph Core ["Antigravity Commerce Core (Modular Monolith)"]
-        
-        subgraph Commerce ["Commerce Domains"]
-            Cat[Catalog & Attributes]
-            Inv[Inventory & Ledger]
-            Pri[Pricing & Promotion]
-        end
-        
-        subgraph Transaction ["Transaction Domains"]
-            Cart[Cart & Checkout]
-            Ord[Order Management]
-            Pay[Payment Gateway SDK]
-        end
-        
-        subgraph Ops ["Operations & Customers"]
-            Cust[Identity & B2B CRM]
-            Ship[Shipping & Logistics]
-            WH[Webhook Outbound]
-        end
-        
-        %% Event Bus
-        EventBus((Internal Event Bus<br/>Transactional Outbox))
-    end
+### Premium Partners
 
-    %% Infrastructure
-    subgraph Infra ["Infrastructure Layer"]
-        DB[(MySQL 8+<br/>Multi-Tenant)]
-        Cache[(Redis Cache)]
-        Search[(Elasticsearch)]
-    end
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-    %% Connections
-    W --> API
-    M --> API
-    B --> API
-    A --> API
+## Contributing
 
-    API --> Cat
-    API --> Cart
-    API --> Cust
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-    Cat -. "Domain Events" .-> EventBus
-    Cart -. "Domain Events" .-> EventBus
-    Ord -. "Domain Events" .-> EventBus
-    Pay -. "Domain Events" .-> EventBus
+## Code of Conduct
 
-    EventBus -. "Async React" .-> Inv
-    EventBus -. "Async React" .-> Ship
-    EventBus -. "Async React" .-> WH
-    EventBus -. "Sync Search" .-> Search
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-    Cat ==> DB
-    Inv ==> DB
-    Ord ==> DB
-    Pay ==> DB
-    
-    Cat -.-> Cache
-```
+## Security Vulnerabilities
 
----
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-## 🏗️ Implementation Hierarchy (10 Tiers / 36 Phases)
+## License
 
-The construction of the Antigravity platform follows a strict 10-tier, 36-phase execution pipeline. A layer cannot begin until the preceding layer is fully certified (tested, audited, documented).
-
-```mermaid
-gantt
-    title Antigravity Implementation Roadmap (F0 - F34)
-    dateFormat YYYY-MM-DD
-    axisFormat %v
-    
-    section Kat 0 & 1: Foundation
-    Architecture & ADR (F0)       :active, 2026-09-01, 1w
-    Core Foundation (F1)          :2026-09-08, 1w
-    DB & API & Events (F2,F18,F19):2026-09-15, 1w
-    
-    section Kat 2 & 3: Pillars
-    Auth & Security (F3,F22A)     :2026-09-22, 1w
-    Localization & Catalog (F15,F4,F5): 2026-09-29, 2w
-    Inventory & Search (F6,F28)   :2026-10-13, 1w
-    
-    section Kat 4: Transaction Flow
-    B2B, Cart, Rule Engine (F32,F7,F13): 2026-10-20, 2w
-    Checkout, Payment, Order (F8,F9,F10): 2026-11-03, 2w
-    Subscription, Ship, Tax (F33,F11,F12): 2026-11-17, 1w
-    
-    section Kat 5-10: Scale & Ops
-    SEO, CMS, Merchant (F14-F17)  :2026-11-24, 2w
-    AI & CX (F27,F31)             :2026-12-08, 1w
-    Admin, Webhooks, API (F20,F34):2026-12-15, 1w
-    Audit, Test, Deploy (F21-F24) :2026-12-22, 1w
-```
-
----
-
-## 🛡️ Core Engineering Invariants
-
-The platform is strictly governed by the following engineering contracts. Any PR violating these invariants will fail the CI/CD pipeline:
-
-1. **Idempotency by Design:** All critical side-effect operations (`POST /orders`, `POST /payments`) require an `Idempotency-Key` to prevent duplicate processing during network retries.
-2. **Canonical Inventory Model:** `available = on_hand - reserved - committed`. State changes are backed by an immutable stock ledger.
-3. **Webhook Deduplication:** Handled strictly via an `INSERT-first` mechanism based on unique `provider_event_id` hashes to prevent multiple asynchronous workers from processing the same event.
-4. **Data Isolation:** Enforced globally at the Query Builder level. Every operational table contains a `tenant_id`. Cross-tenant data leakage is structurally impossible.
-5. **AI Authorization Boundaries:** RAG models and AI Agents operate under strict Risk-Level IAM. While product retrieval (Low Risk) is open, mutations like cart generation and payment (High Risk) require Explicit User Confirmation.
-
----
-
-## 📂 Project Structure & Governance
-
-```text
-/
-├── ARCHITECTURE_MASTER_SPEC.md   # The absolute engineering constitution (Invariants, Domain Boundaries)
-├── PROJE_DETAY.md                # Executive vision and high-level platform capabilities
-├── YAPILACAKLAR.md               # Master checklist of the 36 execution steps (F0-F34)
-└── docs/
-    ├── planlama/                 # Granular phase definitions and task breakdowns (F0-F34)
-    └── adr/                      # Architecture Decision Records (ADRs)
-```
-
-**Next Steps:** Review the [YAPILACAKLAR.md](yapilacaklar.md) to track active phase progression or read the [ARCHITECTURE_MASTER_SPEC.md](ARCHITECTURE_MASTER_SPEC.md) before contributing code.
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
