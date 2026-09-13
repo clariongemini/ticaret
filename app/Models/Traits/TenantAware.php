@@ -56,6 +56,7 @@ trait TenantAware
      */
     public function newEloquentBuilder($query)
     {
+        /** @phpstan-ignore-next-line */
         return new class($query) extends \Illuminate\Database\Eloquent\Builder {
             public function update(array $values)
             {
