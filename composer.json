@@ -71,6 +71,9 @@
         },
         "audit": {
             "abandoned": "ignore"
+        },
+        "platform": {
+            "php": "8.3.0"
         }
     },
     "policy": {
