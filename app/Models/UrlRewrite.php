@@ -68,7 +68,7 @@ class UrlRewrite extends BaseModel
             return;
         }
 
-        $targetIdStr = (string) $targetId;
+        $targetIdStr = is_scalar($targetId) ? (string) $targetId : '[non-scalar]';
 
         /** @var Model|null $target */
         $target = $targetClass::withoutGlobalScopes()->find($targetId);
