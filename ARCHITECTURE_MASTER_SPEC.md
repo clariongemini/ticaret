@@ -1,7 +1,7 @@
 # 🏛️ ANTIGRAVITY E-COMMERCE: ARCHITECTURE MASTER SPECIFICATION
 
-**Versiyon:** 1.0.0  
-**Durum:** TASLAK (Mühendislik Onayı Bekleniyor)  
+**Versiyon:** 1.1.0  
+**Durum:** TASLAK (Hardening Phase - F0)  
 **Kapsam:** Kesin Mimari Kontratlar, Domain Sınırları ve Sistem İnvaryantları (Invariants)  
 
 Bu belge, Antigravity E-Commerce platformunun inşasında yapay zeka ve mühendislik ekipleri tarafından uyulması **ZORUNLU** olan anayasal kuralları tanımlar. `PROJE_DETAY.md` dosyasındaki vizyonun uygulanabilir, test edilebilir ve ölçülebilir teknik spesifikasyonudur.
@@ -12,13 +12,13 @@ Bu belge, Antigravity E-Commerce platformunun inşasında yapay zeka ve mühendi
 ---
 
 ## 01. Architecture Principles
-*   **Strict Modular Monolith:** Modüller arası doğrudan veritabanı sorgusu veya senkron yazma (write) işlemi YASAKTIR. İletişim sadece Domain Event'ler veya salt-okunur (read-only) API kontratları üzerinden yapılır.
-*   **Event-Driven by Default:** Her state (durum) değişikliği zorunlu olarak bir Domain Event fırlatır.
-*   **Headless & API-First:** Frontend için özel endpoint yazılamaz. Tüm API'ler OpenAPI (Swagger) 3.1 standardında dökümante edilir.
-*   **Idempotency:** Tüm mutasyona sebep olan (POST, PUT, PATCH, DELETE) endpoint'ler idempotent olmak zorundadır (Idempotency-Key header'ı zorunludur).
+*   **Strict Modular Monolith:** Modüller arası iletişim sadece Domain Event'ler veya salt-okunur (read-only) API kontratları üzerinden yapılır.
+*   **Pragmatic Event-Driven:** Her teknik CRUD (mutation) değil, **sadece Domain-significant state transition'lar** event üretir (Örn: `OrderPlaced`, `InventoryReserved`). Event sistemi gürültüden arındırılmalıdır.
+*   **Headless & API-First:** Platform agnostiktir. Frontend (Storefront) için özel endpoint veya business logic içeren BFF (Backend for Frontend) yazılamaz.
+*   **Idempotency:** Side-effect üreten tüm kritik mutasyonlar (Örn: `CreateOrder`, `CapturePayment`) için `Idempotency-Key` zorunludur. Doğal idempotent işlemler (Örn: `PUT /profile`) için zorunlu değildir.
 
 ## 02. System Context
-Sistem; Core E-Commerce API, Merchant Admin API, B2B Portal API, AI Commerce API ve Webhook Gateway olmak üzere 5 ana giriş noktasına (ingress) sahiptir. Dış sistemlerle (ERP, CRM) entegrasyon sadece Webhook'lar ve Asenkron Queue worker'lar üzerinden yapılır.
+Sistem; Core Commerce API, Merchant Admin API, B2B Portal API, AI Commerce API ve Webhook Gateway giriş noktalarına sahiptir. Dış sistemlerle entegrasyon asenkron queue worker'lar üzerinden yapılır.
 
 ## 03. Domain Map
 Sistem 4 ana domain grubundan oluşur:
@@ -27,190 +27,129 @@ Sistem 4 ana domain grubundan oluşur:
 3.  **Customer & B2B:** Identity, B2B Ledger, CRM.
 4.  **Operations:** Fulfillment, Shipping, Notification.
 
-## 04. Bounded Context Map
-Her bounded context (BC) kendi veritabanı şemasını (schema) yönetir. (Örn: `catalog_products`, `order_orders`). Ortak (shared) tablo kullanımı kesinlikle yasaktır. Bir BC'nin verisine ihtiyaç duyan diğer BC, ya event dinler ya da API kontratını kullanır.
+## 04. Bounded Context & Database Ownership Modeli
+*   **Tek MySQL Veritabanı:** Altyapı olarak MySQL 8+ kullanılır.
+*   **Logical Ownership:** Veritabanı tektir, ancak tablolar mantıksal olarak (prefix veya namespace ile) BC'lere aittir (Örn: `catalog_products`, `order_orders`).
+*   **Ownership Boundary:** BC A, BC B'nin tablolarına doğrudan SQL YAZAMAZ ve BC B'nin tablolarını kendi repository'siyle OKUYAMAZ.
 
 ## 05. Module Dependency Rules
 *   Bağımlılık yönü her zaman dıştan içe doğrudur (Onion Architecture).
-*   **Application Layer**, **Domain Layer**'a bağımlıdır.
-*   Hiçbir modül `Order` modülüne doğrudan bağımlı olamaz (Döngüsel bağımlılığı önlemek için).
-*   Cross-cutting concern'ler (Loglama, Auth) altyapı (Infrastructure) katmanında çözülür.
+*   Hiçbir modül `Order` modülüne doğrudan bağımlı olamaz.
 
 ## 06. Tenant / Store / Channel Model
-*   **İzolasyon Modeli:** Logical Separation (Shared Database, Separate Schema/Tenant_ID).
-*   Veritabanındaki her tabloda zorunlu `tenant_id` kolonu bulunur. Global (tenant-aware olmayan) tablolar hariçtir.
-*   Sorgularda Global Scope ile `tenant_id` izolasyonu ORM/Query Builder seviyesinde zorunlu kılınmıştır. Veri sızıntısı (Data Leak) engellenmiştir.
-*   Hiyerarşi: `Tenant (Şirket) -> Store (Mağaza) -> Channel (Satış Kanalı: Web, App, B2B) -> Locale & Currency`
+*   **İzolasyon Modeli:** Logical Separation (Shared Database, Separate Tenant_ID).
+*   Veritabanındaki her tabloda zorunlu `tenant_id` kolonu bulunur. Global tablolar hariçtir.
+*   Sorgularda Global Scope ile `tenant_id` izolasyonu ORM/Query Builder seviyesinde zorunlu kılınmıştır.
+*   Hiyerarşi: `Tenant -> Store -> Channel -> Locale & Currency`
 
 ## 07. Catalog Domain
-Sistemin okuma yükü en yüksek domainidir. Okuma işlemleri CQRS prensibiyle ayrıştırılmalı ve okuma modelleri (Read Models) Redis/Elasticsearch üzerine yansıtılmalıdır (Projection).
+Sistemin okuma yükü en yüksek domainidir. Okuma işlemleri CQRS prensibiyle ayrıştırılır.
 
-## 08. Product Type
-Ürünler esnek tiplere (ProductType) sahiptir. Hard-coded ürün özellikleri yasaktır. (Örn: Giyim, Elektronik tipleri).
-
-## 09. Attribute Engine
-*   **Dynamic Attributes:** EAV (Entity-Attribute-Value) anti-pattern'inden kaçınılarak, özellikler `JSONB` formatında (PostgreSQL) indexlenebilir şekilde tutulur.
-*   Attribute'lar `filterable`, `searchable`, `translatable` gibi metadatalara sahiptir.
+## 08. Product Type & 09. Attribute Engine
+*   **Hibrit Relational + JSON Modeli:** Salt JSONB veya EAV yerine, metadata relational tutulur.
+*   Gerekli tablolar: `ozellik_tanimlari`, `ozellik_gruplari`, `urun_tipleri`, `urun_tip_ozellikleri`, `urun_ozellik_degerleri`, `varyant_ozellik_degerleri`.
+*   Arama ve listeleme performansı için optimize edilmiş JSON projection (MySQL JSON tipinde) ve generated/functional indexler kullanılır.
+*   Özellikler SEO, filtreleme, varyant oluşturma gibi davranışlara göre sınıflandırılır.
 
 ## 10. Variant Engine
-Varyantlar (SKU), Product'ın fiziksel olarak satılabilir alt birimleridir. Ana ürün satılamaz, varyant satılır. (Varyantsız ürünlerin de gizli bir varsayılan varyantı olur).
+Varyantlar (SKU), Product'ın fiziksel olarak satılabilir alt birimleridir. Ana ürün satılamaz, varyant satılır.
 
 ## 11. Pricing Engine
-*   Fiyatlar sabit değildir; bağlama (Context) göre çözümlenir: `f(Product, Customer, Channel, Currency, Date) = Price`
-*   Para birimleri her zaman en küçük birim (Cents/Kuruş) olarak `integer` formatında saklanır. Küsüratlı işlemler (Float/Decimal) YASAKTIR.
+*   **Fiyat Çözümleme Zinciri (Resolution Priority):** `f(Tenant, Store, Channel, CustomerGroup, Customer, Product, Variant, Currency, Quantity, Promotion, Date) = Price`
+*   B2B için Tier Pricing (Örn: 100+ adet) ve Müşteriye Özel Fiyatlar (VIP Müşteri) net bir hiyerarşiyle (priority) çözümlenir.
 
 ## 12. Category / Brand
-Nested Set veya Materialized Path modeliyle tutulan, sonsuz derinlikli kategori ağacı.
+Nested Set veya Materialized Path modeli.
 
 ## 13. Inventory
-Stoklar fiziksel depolara (Warehouse) bağlıdır. Stok modeli: `Quantity = Available + Reserved`.
+*   **Durum Modeli (State):** `on_hand`, `reserved`, `available`, `incoming`, `committed`, `damaged`, `returned` ayrımı zorunludur.
+*   **Canonical Formula:** `available = on_hand - reserved - committed`
+*   Mevcut durum materialize olarak tutulur. Her sorguda ledger history (event replay) çalıştırılmaz.
 
 ## 14. Reservation
-*   **Concurrency Garantisi:** Sepetten checkout'a geçildiğinde stok rezervasyonu (Soft Allocation) başlar.
-*   Rezervasyon süresi (Örn: 15 dk) dolduğunda veya ödeme başarısız olduğunda, Cron/Queue worker ile rezervasyon otomatik düşürülür ve `Available` stoğa eklenir.
+*   **State Machine:** `PENDING -> RESERVED -> COMMITTED | RELEASED | EXPIRED | CANCELLED`
+*   Payment success -> Commit reservation. Payment failure -> Release reservation. Payment timeout -> Wait. Webhook later arrives SUCCESS -> Commit if still valid.
 
 ## 15. Warehouse & 16. Stock Ledger
-*   Birden çok depo desteği.
-*   Stok hareketleri değişmez bir muhasebe defteri (Ledger) gibi Event Sourcing mantığıyla tutulur (IN/OUT hareketleri). Mevcut stok, bu hareketlerin toplamıdır.
+*   Stok hareketleri (IN/OUT) Ledger'da tutulur (Immutable history). Current inventory state ise güncellenir (Materialized).
 
 ## 17. Customer
-Müşteri verileri GDPR/KVKK uyumlu, şifrelenmiş (PII data encryption) olarak tutulur.
+Müşteri verileri KVKK/GDPR requirements-aware bir mimariyle saklanır (PII data encryption/masking, Right to be forgotten API'leri).
 
 ## 18. B2B & 19. Credit Ledger
-*   Şirket profilleri, yetkili personeller ve hiyerarşik onay mekanizmaları.
-*   **Credit Ledger:** Açık hesap işlemleri finansal bir ledger olarak tutulur. Kredi limiti aşımı (Overdraft) sıkı transactional kilitlerle korunur.
+*   Açık hesap limitleri finansal bir ledger olarak tutulur.
+*   Kredi limiti aşımı (Overdraft) sıkı transactional kilitlerle (Race Condition korumasıyla) korunur.
 
-## 20. Cart
-*   Dağıtık önbellekte (Redis) tutulur, siparişe dönüştüğünde kalıcılaştırılır.
-*   Fiyat ve stok her sepete erişimde (veya sepete eklemede) canlı olarak re-validate edilir.
-
-## 21. Checkout
-State Machine ile yönetilen ödeme akışı: `Address -> Shipping -> Payment -> Placed`. Her adım tamamlanmadan bir sonrakine geçilemez.
+## 20. Cart & 21. Checkout
+Sepet fiyat ve stok doğrulamalarını canlı yapar. Checkout katı bir State Machine ile yönetilir.
 
 ## 22. Order
-*   Sipariş durumu katı bir State Machine ile yönetilir. (Örn: `Pending -> Authorized -> Processing -> Shipped -> Delivered`).
-*   Durum geçişleri yetkilendirme ve kurallara (Transition Guards) tabidir.
+Sipariş durumu katı bir State Machine ile yönetilir (Örn: `Pending -> Authorized -> Processing -> Shipped -> Delivered`).
 
-## 23. Payment & 24. Payment Gateway SDK
-*   **Gateway Contract:** Sağlayıcı bağımsız (Stripe, Iyzico, vb.) ortak bir `PaymentGatewayInterface` zorunludur.
-*   Payment Intent / Attempt mekanizması.
+## 23. Payment & 24. Payment Gateway SDK Contract
+*   **Capability Matrix:** Sağlayıcılar `supports3DS`, `supportsRecurring`, `supportsPartialRefund`, `supportsCapture`, `supportsVoid` gibi yeteneklerini deklare eder.
+*   **Canonical Status:** Provider'a özel durumlar (Örn: `iyzico_status = SUCCESS`) core domain'e sızdırılamaz. Sadece Canonical durumlar (`AUTHORIZED`, `CAPTURED`, `FAILED`, `CANCELLED`, `REFUNDED`) kullanılır.
 
 ## 25. Refund & 26. Reconciliation
-*   Kısmi iade (Partial Refund) desteği.
-*   Banka mutabakatı (Reconciliation) için transaction kayıtlarında External Provider Reference ID tutulması zorunludur.
+Kısmi iade desteği ve zorunlu External Provider Reference ID mutabakatı.
 
-## 27. Shipping & 28. Tax
-*   Dinamik kargo fiyatlandırması (Ağırlık, Desi, Bölge).
-*   Bölgesel (Zip Code bazlı) ve ürün tipine göre değişen vergi oranları hesaplama motoru.
+## 27. Shipping & 28. Tax & 29. Invoice
+Dinamik kargo/vergi kuralları. Fatura immutable bir dökümandır.
 
-## 29. Invoice
-Fatura yasal bir dökümandır, oluşturulduktan sonra değiştirilemez (Immutable). Sadece iptal (Cancellation) veya iade faturası (Credit Note) kesilebilir.
+## 30. RMA / Returns & 31. Promotion & 32. Rule Engine
+İade State Machine'i ve AST (Abstract Syntax Tree) ile modellenen kural motoru.
 
-## 30. RMA / Returns
-İade talepleri siparişten ayrı bir yaşam döngüsüne (State Machine) sahiptir: `Requested -> Approved -> Received -> Inspected -> Refunded`.
-
-## 31. Promotion & 32. Rule Engine
-*   Güvenli DSL (Domain Specific Language) tabanlı Kural Motoru.
-*   AST (Abstract Syntax Tree) ile ifade edilen koşullar: `If (Cart.Total > 100 AND Customer.Group == VIP) Then (Apply Discount(10%))`.
-*   Sonsuz döngüleri ve çatışmaları önlemek için promosyon öncelik (Priority) ve durdurma (Stop processing other rules) kuralları.
-
-## 33. Coupon
-Tek kullanımlık, çoklu kullanımlık veya kullanıcıya özel şifrelenmiş kodlar. Concurrency (aynı kodu aynı anda kullanma) için Row-Level Locking uygulanır.
-
-## 34. Subscription & 35. Recurring Payment
-Abonelik planları ve döngüsel ödeme (Cron) tetikleyicileri. Dunning (Ödeme alınamadığında yeniden deneme) state machine'i.
+## 33. Coupon & 34. Subscription & 35. Recurring Payment
+Kuponlarda concurrency koruması, aboneliklerde Dunning (yeniden deneme) mekanizmaları.
 
 ## 36. CMS & 37. Media
-Headless sayfa blokları ve S3/CDN entegre medya yönetimi. Resimler yükleme anında optimize edilir (WebP/AVIF).
+Headless sayfa blokları ve optimize medya yönetimi.
 
 ## 38. Localization & 39. Translation
-Sistemin her string değeri ve ürün datası i18n uyumludur. Fallback dil mekanizması.
+Sistemin string ve data değerleri i18n uyumludur.
 
 ## 40. SEO, 41. Schema.org, 42. Sitemap
-*   SEO Entity Modeli: Her entity (Product, Category) URL Rewrite, Meta Title, Description içerir.
-*   `hreflang` ve `canonical` URL kuralları kesin olarak uygulanır.
-*   Otomatik JSON-LD şemaları oluşturulur.
+*   SEO Entity Modeli: Meta Title, Description, Canonical/Hreflang.
+*   SSR (Server-Side Rendering), backend invariant'ı değil, frontend/storefront uygulama zorunluluğudur (Implementation Requirement). Backend tamamen frontend-agnostic çalışır.
 
-## 43. Merchant Center
-Google Merchant Center / Meta XML feed'leri oluşturma ve streaming (büyük veriler için chunked iterasyon) yeteneği.
-
-## 44. Search
-Elasticsearch / Meilisearch altyapısı. Yazım düzeltme (Typo tolerance), facet (filtreleme) ve boosting (ağırlıklandırma) motoru.
+## 43. Merchant Center & 44. Search
+Feed streaming yeteneği ve Typo-tolerant arama altyapısı.
 
 ## 45. AI Commerce API
-*   AI Ajanları için güvenli, salt-okunur ağırlıklı "Function Calling" (Tools) API'si.
-*   Prompt Injection ve yetkisiz veri erişimine karşı (Kullanıcı X sadece kendi siparişlerini görebilir) katı IAM/RBAC denetimi.
+*   Güvenli "Function Calling" API'si.
+*   **Tool-Level Authorization:** AI ajanı, yetkisiz ödeme (Checkout) veya kritik state değişimi YAPAMAZ.
+*   `create_checkout`, `create_payment_intent` gibi kritik işlemlerde AI ajanı "explicit user confirmation required" kuralına tabidir.
 
-## 46. Authentication & 47. RBAC
-*   Oauth2 veya JWT tabanlı Stateless Authentication.
-*   Role-Based Access Control (RBAC) + Attribute-Based Access Control (ABAC). "Ürün Sorumlusu sadece X kategorisindeki ürünleri düzenleyebilir" yeteneği.
-
-## 48. API Security
-*   Rate Limiting (IP ve Token bazlı).
-*   Payload şifreleme ve imzalama (Webhooklar için HMAC SHA256).
+## 46. Authentication & 47. RBAC & 48. API Security
+Oauth2/JWT, ABAC/RBAC kontrolleri.
 
 ## 49. Webhooks & 50. Events
-*   **Idempotency & Replay:** Webhook teslimatları kaydedilir, başarısız olanlar Exponential Backoff ile tekrar denenir.
-*   Event'ler standart CloudEvents spesifikasyonunda formatlanır.
+*   **Idempotency & Replay:** Webhook teslimatları için katı tablo şeması (`event_id`, `provider_event_id`, `signature`, `received_at`, vb.).
+*   **Deduplication:** `INSERT webhook_event WHERE provider_event_id UNIQUE` şeklinde Insert-first deduplication kuralı zorunludur. Aynı webhook event'inin birden fazla işlenmesi önlenir.
 
 ## 51. Outbox & 52. Queues
-*   **Transactional Outbox Pattern:** Veritabanına yazma işlemi ile event fırlatma işleminin (Dual Write) tutarlılığını garanti eder. Event önce aynı transaction içinde `outbox` tablosuna yazılır, sonra asenkron worker tarafından Message Broker'a (RabbitMQ/Kafka/Redis) iletilir.
+Transactional Outbox Pattern zorunluluğu.
 
 ## 53. Plugin Architecture & 54. Integration SDK
-Uygulama çekirdeği (Core) değiştirilmeden, Service Container binding'leri ve Event Listener'lar üzerinden eklenti geliştirme (Hook sistemi).
+Core değiştirilmeden Hook/Service Container üzerinden eklenti geliştirme.
 
-## 55. Admin Architecture
-React/Vue SPA tabanlı, tamamen Headless API tüketen yönetim arayüzü.
+## 55. Admin Architecture & 56. Frontend Contract & 57. Mobile Contract
+Tek merkezi API-first Commerce Core. BFF'nin Core'a (Business logic taşıyan katmana) dönüşmesi yasaktır.
 
-## 56. Frontend Contract & 57. Mobile Contract
-BFF (Backend for Frontend) veya GraphQL üzerinden optimize edilmiş payload'lar.
+## 58. Database Architecture & 59. Complete ERD & 60. Index Strategy & 61. Cache
+MySQL 8+ altyapısı, B-Tree indeksler ve Tag-based cache.
 
-## 58. Database Architecture & 59. Complete ERD
-PostgreSQL tercih edilir. İlişkisel bütünlük (Foreign Keys) sıkı uygulanır. NoSQL kullanılacaksa sadece okuma/cache/döküman (JSON) ihtiyacı olan yerlerde tercih edilir.
-
-## 60. Index Strategy & 61. Cache
-*   Tüm foreign key ve sık sorgulanan alanlarda B-Tree index zorunluluğu.
-*   Cache Invalidations: Etiket tabanlı (Tag-based) cache temizleme mekanizması (Örn: Ürün değiştiğinde `product:123` etiketli tüm cache'ler düşer).
-
-## 62. Performance & 63. Observability
-*   N+1 Sorgu problemi Eager Loading ile sistem seviyesinde engellenir.
-*   OpenTelemetry, Tracing (X-Request-ID) ve merkezi loglama (ELK/Grafana Loki).
-
-## 64. Audit & 65. Security Threat Model
-Tüm veri mutasyonları `audit_logs` tablosuna (Kim, Ne Zaman, Eski Veri, Yeni Veri) yazılır.
+## 62. Performance & 63. Observability & 64. Audit & 65. Security Threat Model
+Eager Loading zorunluluğu, Tracing ve merkezi loglama.
 
 ## 66. KVKK / Data Governance
-Veri anonimleştirme (Right to be forgotten) api'leri. PII (Personally Identifiable Information) maskeleme.
+KVKK/GDPR requirements-aware architecture uygulanır. (Madde 17 ile bağlantılı).
 
 ## 67. Testing Architecture (68-70)
-*   Birim Test (Unit Test), Entegrasyon Testi, Uçtan Uca (E2E) Test piramidi zorunludur.
-*   **Concurrency & Payment Testing:** Yarış durumları (Race conditions) ve mock ödeme senaryoları (Başarılı, 3D Secure, Yetersiz Bakiye, Timeout) otomatik testlerle doğrulanır.
-*   **Contract Testing:** Frontend ve API arasındaki veri kontratının kırılmadığı test edilir.
+*   Sadece `%80 coverage` değil, sistem invariant'larını test eden (Inventory concurrency, payment idempotency, webhook replay, tenant isolation, B2B credit race vb.) Invariant/Concurrency testleri birincil kalite ölçütüdür.
 
-## 71. Deployment & 72. CI/CD
-*   Zero-Downtime Deployment (Sıfır kesinti).
-*   Git flow ve immutable artifact yapısı.
-
-## 73. Backup & 74. Disaster Recovery
-Düzenli Snapshot, Point-in-time recovery (PITR) ve aktif-pasif felaket kurtarma planı.
-
-## 75. API Versioning
-URL path (`/v1/`) veya Header tabanlı API versiyonlama. Geriye dönük uyumluluk (Backward compatibility) esastır; kırıc değişiklikler (Breaking changes) sadece yeni versiyonda yapılır.
-
-## 76. Migration & 77. Upgrade Strategy
-Veritabanı şema değişiklikleri sadece up/down migration dosyaları ile yönetilir. Sürüm yükseltmeleri veri kaybı yaşatmayacak şekilde planlanır.
-
-## 78. ADR Rules & 79. Architecture Governance
-Önemli teknik kararlar (Kütüphane seçimi, Mimari değişiklik) Architecture Decision Records (ADR) belgeleri oluşturularak kayıt altına alınır.
-
-## 80. Definition of Done (DoD)
-Bir özelliğin bitti kabul edilmesi için: "Kodlandı, Testler yazıldı (Min %80 coverage), OpenAPI güncellendi, Performans testi yapıldı, Code Review alındı." şartları aranır.
-
-## 81. Implementation Phases
-Geliştirme, `PROJE_DETAY.md` dosyasındaki 10 Katmanlı (35 Faz) hiyerarşiye birebir uyumlu, Agile (Scrum/Kanban) iterasyonlarla yürütülür.
-
-## 82. Quality Gates & 83. Final Architecture Gate
-SonarQube/Benzeri araçlarla statik kod analizi. Mimari onay (Architecture Gate) geçilmeden CI/CD pipeline'ı kodu Production'a almaz.
+## 71-83. CI/CD, Deployment, Definitions of Done & Architecture Gates
+Sıfır kesinti, strict code review ve statik analiz süreçleri.
 
 ---
-**TANIMLANDI:** Bu belge, Antigravity E-Commerce projesinin teknik anayasasıdır. Yapay Zeka veya Mühendisler tarafından kod üretimi aşamasında referans alınacak tek teknik doğruluk kaynağı (Single Source of Truth) budur.
+**KARAR:** Bu belge (v1.1), sistemin Hardening aşamasından geçmiş teknik anayasasıdır. Kodlama aşamasında F0 - F34 arasındaki modüller bu kurallara harfiyen uyarak inşa edilecektir.
