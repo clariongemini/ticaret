@@ -2,6 +2,7 @@ parameters:
   paths:
     - ./app
   layers:
+    # 1. HORIZONTAL LAYERS (Architecture boundaries)
     - name: Domain
       collectors:
         - type: directory
@@ -27,7 +28,36 @@ parameters:
         - type: directory
           value: app/SharedKernel/.*
           regex: true
+    
+    # 2. VERTICAL MODULES (Bounded Contexts boundaries)
+    - name: ModuleCatalog
+      collectors:
+        - type: directory
+          value: app/Modules/Catalog/.*
+          regex: true
+    - name: ModuleOrder
+      collectors:
+        - type: directory
+          value: app/Modules/Order/.*
+          regex: true
+    - name: ModulePayment
+      collectors:
+        - type: directory
+          value: app/Modules/Payment/.*
+          regex: true
+    - name: ModuleInventory
+      collectors:
+        - type: directory
+          value: app/Modules/Inventory/.*
+          regex: true
+    - name: ModuleCart
+      collectors:
+        - type: directory
+          value: app/Modules/Cart/.*
+          regex: true
+
   ruleset:
+    # HORIZONTAL RULES
     Domain:
       - SharedKernel
     Application:
@@ -40,4 +70,17 @@ parameters:
     API:
       - Application
       - Domain
+      - SharedKernel
+
+    # VERTICAL RULES (Module Isolation)
+    # Modules can only talk to SharedKernel, not to each other directly.
+    ModuleCatalog:
+      - SharedKernel
+    ModuleOrder:
+      - SharedKernel
+    ModulePayment:
+      - SharedKernel
+    ModuleInventory:
+      - SharedKernel
+    ModuleCart:
       - SharedKernel

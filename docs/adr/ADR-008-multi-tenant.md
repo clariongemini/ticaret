@@ -11,7 +11,7 @@ Bu veriyi birbirinden nasıl izole edeceğimiz (Data Isolation) sistemin kalbini
 
 Geleneksel seçenekler:
 1. **Database per Tenant**: Her müşteri için ayrı veritabanı oluşturulur. İzolasyon kusursuzdur, ancak 1000 mağaza olunca 1000 veritabanını yönetmek ve migration (şema) güncellemek imkansızlaşır.
-2. **Schema per Tenant (PostgreSQL)**: Her mağaza için ayrı şema. MySQL'de karşılığı yoktur (Ayrı DB ile aynıdır).
+2. **Ayrı Veritabanı (Database-per-Tenant)**: Her mağaza için tamamen ayrı veritabanı. Bakım ve migration yükü çok fazladır. MySQL 8.0+ mimarisinde tercih edilmez.
 3. **Shared Database, Shared Schema (Column-based)**: Tüm müşteriler aynı tabloda yer alır, her satırda `tenant_id` veya `store_id` kolonu bulunur.
 
 ## Decision
