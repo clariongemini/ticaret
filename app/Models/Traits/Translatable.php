@@ -15,7 +15,8 @@ trait Translatable
      */
     public function getTranslation(string $attribute, ?string $locale = null): ?string
     {
-        $locale = $locale ?: (string) App::getLocale();
+        $appLocale = App::getLocale();
+        $locale = $locale ?: (is_string($appLocale) ? $appLocale : 'tr');
         /** @var mixed $translations */
         $translations = $this->{$attribute};
 
@@ -27,7 +28,8 @@ trait Translatable
         }
 
         // Fallback to primary locale (e.g., 'tr') if current locale is not found
-        $fallbackLocale = (string) config('app.fallback_locale', 'tr');
+        $configLocale = config('app.fallback_locale', 'tr');
+        $fallbackLocale = is_string($configLocale) ? $configLocale : 'tr';
         if (is_array($translations)) {
             $fallbackVal = $translations[$fallbackLocale] ?? null;
             if (is_string($fallbackVal)) {
