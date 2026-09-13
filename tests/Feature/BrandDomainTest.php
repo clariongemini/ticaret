@@ -23,7 +23,6 @@ class BrandDomainTest extends TestCase
             $this->tenant = Tenant::create([
                 'name' => 'Test Tenant',
                 'slug' => 'test-tenant-' . Str::random(6),
-                'domain' => Str::random(10) . '.example.com',
             ]);
         });
     }
@@ -70,7 +69,6 @@ class BrandDomainTest extends TestCase
             return Tenant::create([
                 'name' => 'Other Tenant',
                 'slug' => 'other-tenant-' . Str::random(6),
-                'domain' => Str::random(10) . '.example.com',
             ]);
         });
 
