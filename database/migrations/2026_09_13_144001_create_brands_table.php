@@ -23,12 +23,6 @@ return new class extends Migration
             // Foreign keys
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             
-            // Unique constraint using generated column or simply relying on application logic?
-            // Since MySQL JSON extract unique indexes require generated columns in older versions, 
-            // but Laravel handles it well or we can just enforce it on the primary locale or use a simple unique index on a virtual column.
-            // Let's add a virtual column for the primary slug to enforce uniqueness per tenant.
-            $table->string('primary_slug')->virtualAs("slug->>'$.tr'");
-            $table->unique(['tenant_id', 'primary_slug']);
         });
     }
 

@@ -4,12 +4,37 @@ namespace App\Models;
 
 use App\Models\Traits\TenantAware;
 use App\Models\Traits\Translatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Category extends BaseModel
 {
     use TenantAware, Translatable;
+
+    protected static function booted()
+    {
+        static::saving(function (Category $category) {
+            if ($category->isDirty('parent_id') && $category->parent_id !== null) {
+                // Prevent self-assignment
+                if ($category->id === $category->parent_id) {
+                    throw new \DomainException("A category cannot be its own parent.");
+                }
+
+                // Prevent cycle by checking ancestors
+                $currentParentId = $category->parent_id;
+                while ($currentParentId !== null) {
+                    if ($currentParentId === $category->id) {
+                        throw new \DomainException("Category hierarchy cycle detected.");
+                    }
+                    
+                    $parent = Category::find($currentParentId);
+                    $currentParentId = $parent ? $parent->parent_id : null;
+                }
+            }
+        });
+    }
 
     protected $fillable = [
         'parent_id',
@@ -43,6 +68,16 @@ class Category extends BaseModel
     public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    /**
+     * Get the URL rewrites for the category.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<UrlRewrite, $this>
+     */
+    public function urlRewrites(): MorphMany
+    {
+        return $this->morphMany(UrlRewrite::class, 'target');
     }
 
     /**

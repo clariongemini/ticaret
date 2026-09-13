@@ -26,7 +26,7 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('restrict');
             
             // To prevent cross-tenant parents, we can add a composite foreign key
             // First we need a unique constraint on (tenant_id, id) for categories to reference it
@@ -36,11 +36,7 @@ return new class extends Migration
             $table->foreign(['tenant_id', 'parent_id'])
                   ->references(['tenant_id', 'id'])
                   ->on('categories')
-                  ->onDelete('cascade');
-
-            // Unique constraint on slug
-            $table->string('primary_slug')->virtualAs("slug->>'$.tr'");
-            $table->unique(['tenant_id', 'primary_slug']);
+                  ->onDelete('restrict');
         });
     }
 

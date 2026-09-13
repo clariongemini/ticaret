@@ -122,4 +122,54 @@ class CategoryDomainTest extends TestCase
             ]);
         });
     }
+    public function test_cannot_delete_category_with_children()
+    {
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectExceptionMessage('foreign key constraint fails'); // MySQL restrict error
+
+        TenantContext::executeForTenant($this->tenant->id, function () {
+            $parent = Category::create([
+                'name' => ['en' => 'Parent'],
+                'slug' => ['en' => 'parent'],
+            ]);
+
+            Category::create([
+                'parent_id' => $parent->id,
+                'name' => ['en' => 'Child'],
+                'slug' => ['en' => 'child'],
+            ]);
+
+            // Attempt to delete parent should fail due to RESTRICT policy
+            $parent->delete();
+        });
+    }
+
+    public function test_cannot_create_category_cycle()
+    {
+        TenantContext::executeForTenant($this->tenant->id, function () {
+            $a = Category::create(['name' => ['en' => 'A'], 'slug' => ['en' => 'a']]);
+            $b = Category::create(['parent_id' => $a->id, 'name' => ['en' => 'B'], 'slug' => ['en' => 'b']]);
+            
+            // B -> A is valid so far
+
+            // Prevent self assignment
+            $this->expectException(\DomainException::class);
+            $this->expectExceptionMessage("A category cannot be its own parent.");
+            $a->update(['parent_id' => $a->id]);
+        });
+    }
+
+    public function test_cannot_create_category_cycle_deep()
+    {
+        TenantContext::executeForTenant($this->tenant->id, function () {
+            $a = Category::create(['name' => ['en' => 'A'], 'slug' => ['en' => 'a']]);
+            $b = Category::create(['parent_id' => $a->id, 'name' => ['en' => 'B'], 'slug' => ['en' => 'b']]);
+            $c = Category::create(['parent_id' => $b->id, 'name' => ['en' => 'C'], 'slug' => ['en' => 'c']]);
+            
+            // Prevent C being parent of A (A -> B -> C -> A)
+            $this->expectException(\DomainException::class);
+            $this->expectExceptionMessage("Category hierarchy cycle detected.");
+            $a->update(['parent_id' => $c->id]);
+        });
+    }
 }
