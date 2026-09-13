@@ -15,8 +15,7 @@ trait Translatable
      */
     public function getTranslation(string $attribute, ?string $locale = null): ?string
     {
-        $appLocale = App::getLocale();
-        $locale = $locale ?: (is_string($appLocale) ? $appLocale : 'tr');
+        $locale = $locale ?: App::getLocale();
         /** @var mixed $translations */
         $translations = $this->{$attribute};
 
